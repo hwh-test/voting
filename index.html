@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>실시간 투표 시스템</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .options-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .vote-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .vote-btn:hover {
+            background-color: #0056b3;
+        }
+        .chart-container {
+            margin-top: 20px;
+        }
+        .chart-item {
+            margin-bottom: 15px;
+        }
+        .chart-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .bar-background {
+            background-color: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+            height: 24px;
+            width: 100%;
+        }
+        .bar-fill {
+            height: 100%;
+            background-color: #28a745;
+            width: 0%;
+            transition: width 0.4s ease-in-out;
+        }
+        #loading {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>실시간 투표</h2>
+    
+    <div class="options-group">
+        <button class="vote-btn" onclick="vote('optionA')">A안 투표</button>
+        <button class="vote-btn" onclick="vote('optionB')">B안 투표</button>
+        <button class="vote-btn" onclick="vote('optionC')">C안 투표</button>
+    </div>
+
+    <div id="loading">데이터 불러오는 중...</div>
+
+    <div class="chart-container" id="chartContainer">
+        <!-- 동적으로 막대그래프가 그려지는 영역 -->
+    </div>
+</div>
+
+<script>
+    // 배포한 GAS 웹 앱 URL 입력
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxxEA3QaWPE5ShGmyw1UTCzzco4zye9PP2RpZQF_59NCj0Pm1IJjSnphkek3rqDjR2w/exec";
+
+    // 항목 표시 이름 매핑
+    const optionNames = {
+        "optionA": "A안",
+        "optionB": "B안",
+        "optionC": "C안"
+    };
+
+    // 페이지 로드 시 현재 투표 현황 가져오기 (GET)
+    window.onload = function() {
+        fetchVotes();
+    };
+
+    function fetchVotes() {
+        fetch(GAS_URL)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    updateChart(result.data);
+                    document.getElementById('loading').style.display = 'none';
+                } else {
+                    alert("데이터를 불러오는데 실패했습니다: " + result.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // 투표 버튼 클릭 시 실행 (POST)
+    function vote(optionKey) {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('loading').innerText = '투표 반영 중...';
+
+        fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ option: optionKey })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                updateChart(result.data);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('loading').innerText = '데이터 불러오는 중...';
+            } else {
+                alert("투표 처리에 실패했습니다: " + result.error);
+                document.getElementById('loading').style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('loading').style.display = 'none';
+        });
+    }
+
+    // 백분율 계산 및 CSS 바 차트 렌더링
+    function updateChart(data) {
+        const container = document.getElementById('chartContainer');
+        container.innerHTML = '';
+
+        // 총 투표수 계산
+        let totalVotes = 0;
+        for (let key in data) {
+            totalVotes += Number(data[key] || 0);
+        }
+
+        // 각 항목별 막대 생성
+        for (let key in optionNames) {
+            const count = Number(data[key] || 0);
+            const percentage = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(1) : 0;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'chart-item';
+
+            itemDiv.innerHTML = `
+                <div class="chart-label">
+                    <span>${optionNames[key]}</span>
+                    <span>${count}표 (${percentage}%)</span>
+                </div>
+                <div class="bar-background">
+                    <div class="bar-fill" style="width: ${percentage}%;"></div>
+                </div>
+            `;
+            container.appendChild(itemDiv);
+        }
+    }
+</script>
+
+</body>
+</html>
