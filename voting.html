@@ -73,7 +73,7 @@
     <div class="container">
         <h2>실시간 투표 시스템</h2>
         
-        <!-- 투표 항목 리스트 (클릭 시 투표 반영) -->
+        <!-- 투표 항목 리스트 -->
         <div id="poll-container">
             <div class="poll-item" data-id="optionA">
                 <div class="poll-info">
@@ -109,7 +109,71 @@
         <div class="total-votes">총 투표 수: <span id="total-count">0</span>표</div>
     </div>
 
-    <!-- Firebase SDK (Modular v10 CDN 방식) -->
-    <script type="module" src="script.js"></script>
+    <!-- Firebase 로직 (Script 태그 내부에 통합) -->
+    <script type="module">
+        // Firebase 설정 (본인의 Firebase 콘솔 설정값으로 교체하세요)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Firebase 모듈 임포트 (CDN)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const votesRef = ref(db, 'votes');
+
+        // 1. 실시간 데이터 동기화
+        onValue(votesRef, (snapshot) => {
+            const data = snapshot.val() || {};
+            
+            const counts = {
+                optionA: data.optionA || 0,
+                optionB: data.optionB || 0,
+                optionC: data.optionC || 0
+            };
+
+            const totalVotes = counts.optionA + counts.optionB + counts.optionC;
+            document.getElementById('total-count').textContent = totalVotes;
+
+            Object.keys(counts).forEach(id => {
+                const count = counts[id];
+                const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+
+                const itemElement = document.querySelector(`.poll-item[data-id="${id}"]`);
+                if (itemElement) {
+                    itemElement.querySelector('.count').textContent = count;
+                    itemElement.querySelector('.percent').textContent = percent;
+                    
+                    const barElement = document.getElementById(`bar-${id}`);
+                    if (barElement) {
+                        barElement.style.width = `${percent}%`;
+                    }
+                }
+            });
+        });
+
+        // 2. 항목 클릭 시 트랜잭션을 통한 투표 반영
+        document.querySelectorAll('.poll-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const optionId = item.getAttribute('data-id');
+                const optionRef = ref(db, `votes/${optionId}`);
+
+                runTransaction(optionRef, (currentCount) => {
+                    return (currentCount || 0) + 1;
+                }).catch((error) => {
+                    console.error("투표 실패:", error);
+                });
+            });
+        });
+    </script>
 </body>
 </html>
