@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 투표 앱</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .poll-item {
+            margin-bottom: 20px;
+            cursor: pointer;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            background: #fafbfc;
+        }
+        .poll-item:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+        .poll-info {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        .bar-container {
+            background-color: #e9ecef;
+            border-radius: 6px;
+            height: 14px;
+            overflow: hidden;
+            width: 100%;
+        }
+        .bar {
+            background-color: #3498db;
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease-in-out;
+            border-radius: 6px;
+        }
+        .total-votes {
+            text-align: center;
+            margin-top: 25px;
+            color: #7f8c8d;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>실시간 투표 시스템</h2>
+        
+        <!-- 투표 항목 리스트 (클릭 시 투표 반영) -->
+        <div id="poll-container">
+            <div class="poll-item" data-id="optionA">
+                <div class="poll-info">
+                    <span class="label">A안 (재택근무 확대)</span>
+                    <span class="stats"><span class="count">0</span>표 (<span class="percent">0</span>%)</span>
+                </div>
+                <div class="bar-container">
+                    <div class="bar" id="bar-optionA"></div>
+                </div>
+            </div>
+
+            <div class="poll-item" data-id="optionB">
+                <div class="poll-info">
+                    <span class="label">B안 (사무실 출근 유지)</span>
+                    <span class="stats"><span class="count">0</span>표 (<span class="percent">0</span>%)</span>
+                </div>
+                <div class="bar-container">
+                    <div class="bar" id="bar-optionB"></div>
+                </div>
+            </div>
+
+            <div class="poll-item" data-id="optionC">
+                <div class="poll-info">
+                    <span class="label">C안 (하이브리드 자율근무)</span>
+                    <span class="stats"><span class="count">0</span>표 (<span class="percent">0</span>%)</span>
+                </div>
+                <div class="bar-container">
+                    <div class="bar" id="bar-optionC"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="total-votes">총 투표 수: <span id="total-count">0</span>표</div>
+    </div>
+
+    <!-- Firebase SDK (Modular v10 CDN 방식) -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
